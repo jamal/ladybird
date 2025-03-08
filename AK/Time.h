@@ -12,12 +12,7 @@
 #include <AK/Checked.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
-#ifdef AK_OS_WINDOWS
-struct timeval {
-    long tv_sec;
-    long tv_usec;
-};
-#else
+#ifndef AK_OS_WINDOWS
 #    include <sys/time.h>
 #endif
 #include <time.h>
@@ -223,7 +218,11 @@ public:
     }
     [[nodiscard]] static Duration from_ticks(clock_t, time_t);
     [[nodiscard]] static Duration from_timespec(const struct timespec&);
+
+    #ifndef AK_OS_WINDOWS
     [[nodiscard]] static Duration from_timeval(const struct timeval&);
+    #endif
+
     // We don't pull in <stdint.h> for the pretty min/max definitions because this file is also included in the Kernel
     [[nodiscard]] constexpr static Duration min() { return Duration(-__INT64_MAX__ - 1LL, 0); }
     [[nodiscard]] constexpr static Duration zero() { return Duration(0, 0); }
@@ -240,7 +239,10 @@ public:
     [[nodiscard]] i64 to_nanoseconds() const;
     [[nodiscard]] timespec to_timespec() const;
     // Rounds towards -inf (it was the easiest to implement).
+
+    #ifndef AK_OS_WINDOWS
     [[nodiscard]] timeval to_timeval() const;
+    #endif
 
     [[nodiscard]] bool is_zero() const { return (m_seconds == 0) && (m_nanoseconds == 0); }
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
@@ -355,7 +357,10 @@ public:
 
     [[nodiscard]] timespec to_timespec() const { return m_offset.to_timespec(); }
     // Rounds towards -inf.
+
+    #ifndef AK_OS_WINDOWS
     [[nodiscard]] timeval to_timeval() const { return m_offset.to_timeval(); }
+    #endif
 
     // We intentionally do not define a comparison operator here to avoid accidentally comparing incompatible time types.
 

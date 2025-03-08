@@ -31,7 +31,13 @@ static void wait_for_activity(int sock, bool read)
 {
     fd_set fds;
     FD_ZERO(&fds);
+
+#ifdef AK_OS_WINDOWS
+    FD_SET((SOCKET)sock, &fds);
+#else
     FD_SET(sock, &fds);
+#endif
+
 
     if (read)
         select(sock + 1, &fds, nullptr, nullptr, nullptr);
