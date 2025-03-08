@@ -30,9 +30,12 @@
 #include <LibLine/SuggestionDisplay.h>
 #include <LibLine/SuggestionManager.h>
 #include <LibLine/VT.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <termios.h>
+
+#ifndef AK_OS_WINDOWS
+#    include <sys/ioctl.h>
+#endif
 
 namespace Line {
 

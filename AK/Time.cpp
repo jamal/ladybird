@@ -50,6 +50,7 @@ Duration Duration::from_timespec(const struct timespec& ts)
     return Duration::from_half_sanitized(ts.tv_sec, extra_secs, nsecs);
 }
 
+#ifndef AK_OS_WINDOWS
 Duration Duration::from_timeval(const struct timeval& tv)
 {
     i32 usecs = tv.tv_usec;
@@ -57,6 +58,7 @@ Duration Duration::from_timeval(const struct timeval& tv)
     VERIFY(0 <= usecs && usecs < 1'000'000);
     return Duration::from_half_sanitized(tv.tv_sec, extra_secs, usecs * 1'000);
 }
+#endif
 
 i64 Duration::to_truncated_seconds() const
 {
@@ -172,6 +174,7 @@ timespec Duration::to_timespec() const
     return { static_cast<time_t>(m_seconds), static_cast<long>(m_nanoseconds) };
 }
 
+#ifndef AK_OS_WINDOWS
 timeval Duration::to_timeval() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
@@ -180,6 +183,7 @@ timeval Duration::to_timeval() const
     using usec_type = decltype(declval<timeval>().tv_usec);
     return { static_cast<sec_type>(m_seconds), static_cast<usec_type>(m_nanoseconds) / 1000 };
 }
+#endif
 
 Duration Duration::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)
 {

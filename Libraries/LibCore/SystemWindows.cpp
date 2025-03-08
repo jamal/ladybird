@@ -198,6 +198,49 @@ ErrorOr<void> munmap(void* address, size_t size)
     return {};
 }
 
+ErrorOr<int> socket(int domain, int type, int protocol)
+{
+    auto fd = ::socket(domain, type, protocol);
+    if (fd < 0)
+        return Error::from_syscall("socket"sv, -errno);
+    return fd;
+}
+
+ErrorOr<AddressInfoVector> getaddrinfo(char const* nodename, char const* servname, struct addrinfo const& hints)
+{
+    struct addrinfo* results = nullptr;
+
+    int const rc = ::getaddrinfo(nodename, servname, &hints, &results);
+    if (rc != 0) {
+        int const ec = WSAGetLastError();
+        char message[256] = { 0 };
+        FormatMessage(
+            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr,
+            ec,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            message,
+            256,
+            nullptr);
+
+        return Error::from_string_view({ message, strlen(message) });
+    }
+
+    Vector<struct addrinfo> addresses;
+
+    for (auto* result = results; result != nullptr; result = result->ai_next)
+        TRY(addresses.try_append(*result));
+
+    return AddressInfoVector { move(addresses), results };
+}
+
+ErrorOr<void> connect(int sockfd, struct sockaddr const* address, socklen_t address_length)
+{
+    if (::connect(sockfd, address, address_length) < 0)
+        return Error::from_syscall("connect"sv, -errno);
+    return {};
+}
+
 int getpid()
 {
     return GetCurrentProcessId();
